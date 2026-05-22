@@ -3,6 +3,7 @@ import OQueFazemos from './pages/OQueFazemos';
 import Artigos from './pages/Artigos';
 import AssocieSe from './pages/Associe-se';
 import './App.css';
+import QuemSomos from './pages/QuemSomos';
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
         <Route path="/o-que-fazemos" element={<OQueFazemos />} />
         <Route path="/artigos" element={<Artigos />} />
         <Route path="/associe-se" element={<AssocieSe />} />
+        <Route path="/quem-somos" element={<QuemSomos />} />
       </Routes>
     </BrowserRouter>
   );
