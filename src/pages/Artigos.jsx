@@ -1,184 +1,261 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import useDebounce from '../hooks/useDebounce';
+import { buscarArtigos } from '../utils/wordpress';
 import '../styles/artigos.css';
 
-function Artigos() {
-  const [categoriaAtiva, setCategoriaAtiva] = useState('');
-  const [termoBusca, setTermoBusca] = useState('');
+const ORDENACOES = [
+  { value: 'recentes', label: 'Mais recentes' },
+  { value: 'antigos',  label: 'Mais antigos'  },
+  { value: 'titulo',   label: 'Título (A→Z)'  },
+];
 
-  // Lista baseada no seu HTML original
-  const listaArtigos = [
-    {
-      id: 1, categoria: "esg", tagClass: "tag-esg", tagNome: "ESG",
-      titulo: "ESG e o Papel do Conselheiro nas Empresas Modernas",
-      resumo: "Como os conselheiros estão liderando a agenda de sustentabilidade nas companhias brasileiras.",
-      data: "07/07/2024", tempo: "5 min", imagem: "https://picsum.photos/id/1/400/220"
-    },
-    {
-      id: 2, categoria: "carreira", tagClass: "tag-carreira", tagNome: "Carreira",
-      titulo: "Como Desenvolver sua Carreira como Conselheiro",
-      resumo: "Passo a passo para profissionais que desejam ingressar nos conselhos corporativos.",
-      data: "26/11/2024", tempo: "7 min", imagem: "https://picsum.photos/id/2/400/220"
-    },
-    {
-      id: 3, categoria: "mercado", tagClass: "tag-mercado", tagNome: "Mercado",
-      titulo: "5 Práticas Essenciais para a Melhora Empresarial",
-      resumo: "Fórmulas comprovadas que empresas de alto crescimento usam em seus boards.",
-      data: "28/07/2024", tempo: "6 min", imagem: "https://picsum.photos/id/3/400/220"
-    },
-    {
-      id: 4, categoria: "governanca", tagClass: "tag-governanca", tagNome: "Governança",
-      titulo: "Estruturação de Conselhos Consultivos em Startups",
-      resumo: "Por que startups em estágio inicial precisam de conselhos bem estruturados desde cedo.",
-      data: "15/08/2024", tempo: "4 min", imagem: "https://picsum.photos/id/4/400/220"
-    },
-    {
-      id: 5, categoria: "esg", tagClass: "tag-esg", tagNome: "ESG",
-      titulo: "Métricas Sustentáveis para o Futuro",
-      resumo: "Indicadores que os conselhos devem monitorar para garantir um crescimento sustentável.",
-      data: "02/02/2024", tempo: "9 min", imagem: "https://picsum.photos/id/5/400/220"
-    },
-    {
-      id: 6, categoria: "mercado", tagClass: "tag-mercado", tagNome: "Mercado",
-      titulo: "Análise de Risco no Cenário Global",
-      resumo: "Como os boards brasileiras estão se adaptando às incertezas do mercado internacional.",
-      data: "10/10/2024", tempo: "6 min", imagem: "https://picsum.photos/id/6/400/220"
-    },
-    {
-      id: 7, categoria: "carreira", tagClass: "tag-carreira", tagNome: "Carreira",
-      titulo: "Liderança e Gestão de Conflitos no Board",
-      resumo: "Estratégias para presidentes de conselho lidarem com divergências de forma construtiva.",
-      data: "05/05/2024", tempo: "5 min", imagem: "https://picsum.photos/id/7/400/220"
-    },
-    {
-      id: 8, categoria: "governanca", tagClass: "tag-governanca", tagNome: "Governança",
-      titulo: "A Nova Lei de Sociedades Anônimas",
-      resumo: "Impactos das recentes mudanças legislativas para conselhos de administração.",
-      data: "12/01/2024", tempo: "10 min", imagem: "https://picsum.photos/id/8/400/220"
-    },
-    {
-      id: 9, categoria: "esg", tagClass: "tag-esg", tagNome: "ESG",
-      titulo: "Transição Energética e as Empresas de Base",
-      resumo: "O papel dos conselhos na condução de empresas durante a mudança da matriz energética.",
-      data: "20/03/2024", tempo: "7 min", imagem: "https://picsum.photos/id/9/400/220"
+export default function Artigos() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [busca, setBusca]               = useState(searchParams.get('q') || '');
+  const [ordenacao, setOrdenacao]       = useState('recentes');
+  const [categoriaAtiva, setCategoria]  = useState('');
+  const [artigos, setArtigos]           = useState([]);
+  const [pagina, setPagina]             = useState(1);
+  const [totalPaginas, setTotalPaginas] = useState(1);
+  const [carregando, setCarregando]     = useState(true);
+  const [carregandoMais, setMais]       = useState(false);
+  const [erro, setErro]                 = useState(null);
+
+  const buscaDebounce = useDebounce(busca, 350);
+  const sentinelRef = useRef(null);
+
+  // sincroniza ?q= na URL com o input
+  useEffect(() => {
+    if (buscaDebounce) setSearchParams({ q: buscaDebounce }, { replace: true });
+    else setSearchParams({}, { replace: true });
+  }, [buscaDebounce, setSearchParams]);
+
+  // recarrega ao mudar busca
+  useEffect(() => {
+    let cancelado = false;
+    setCarregando(true);
+    setErro(null);
+    setPagina(1);
+
+    buscarArtigos({ pagina: 1, porPagina: 9, busca: buscaDebounce })
+      .then(({ artigos, totalPaginas }) => {
+        if (cancelado) return;
+        setArtigos(artigos);
+        setTotalPaginas(totalPaginas);
+      })
+      .catch(() => !cancelado && setErro('Não foi possível carregar os artigos.'))
+      .finally(() => !cancelado && setCarregando(false));
+
+    return () => { cancelado = true; };
+  }, [buscaDebounce]);
+
+  // carrega próxima página
+  const carregarMais = useCallback(() => {
+    if (carregandoMais || pagina >= totalPaginas || carregando) return;
+    setMais(true);
+    const proxima = pagina + 1;
+    buscarArtigos({ pagina: proxima, porPagina: 9, busca: buscaDebounce })
+      .then(({ artigos: novos }) => {
+        setArtigos(a => [...a, ...novos]);
+        setPagina(proxima);
+      })
+      .catch(() => {})
+      .finally(() => setMais(false));
+  }, [pagina, totalPaginas, carregandoMais, carregando, buscaDebounce]);
+
+  // observer para infinite scroll
+  useEffect(() => {
+    if (!sentinelRef.current) return;
+    const obs = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) carregarMais();
+    }, { rootMargin: '300px' });
+    obs.observe(sentinelRef.current);
+    return () => obs.disconnect();
+  }, [carregarMais]);
+
+  // categorias dinâmicas a partir dos artigos carregados
+  const categorias = useMemo(() => {
+    const set = new Set();
+    artigos.forEach(a => set.add(a.categoria));
+    return ['Todas', ...Array.from(set)];
+  }, [artigos]);
+
+  // ordenação + filtro de categoria (cliente)
+  const artigosVisiveis = useMemo(() => {
+    let lista = [...artigos];
+    if (categoriaAtiva && categoriaAtiva !== 'Todas') {
+      lista = lista.filter(a => a.categoria === categoriaAtiva);
     }
-  ];
+    if (ordenacao === 'antigos')  lista.sort((a, b) => new Date(a.dataIso) - new Date(b.dataIso));
+    if (ordenacao === 'titulo')   lista.sort((a, b) => a.titulo.localeCompare(b.titulo, 'pt-BR'));
+    return lista;
+  }, [artigos, categoriaAtiva, ordenacao]);
 
-  // Lógica de Filtro React
-  const artigosFiltrados = listaArtigos.filter((artigo) => {
-    const matchCategoria = categoriaAtiva === '' || artigo.categoria === categoriaAtiva;
-    const matchBusca = artigo.titulo.toLowerCase().includes(termoBusca.toLowerCase());
-    return matchCategoria && matchBusca;
-  });
+  const destaque = !busca && !categoriaAtiva ? artigos[0] : null;
+  const restoArtigos = destaque ? artigosVisiveis.filter(a => a.id !== destaque.id) : artigosVisiveis;
 
   return (
     <>
+      {/* Banner */}
       <section className="page-banner">
         <div className="page-banner-conteudo">
           <p className="page-banner-tag"><i className="fa-solid fa-newspaper"></i> Conteúdo</p>
           <h1>Artigos & Publicações</h1>
-          <p className="page-banner-sub">Governança corporativa, ESG, carreira e muito mais</p>
+          <p className="page-banner-sub">Governança corporativa, ESG, carreira e mercado — atualizados em tempo real.</p>
         </div>
       </section>
 
+      {/* Barra de categorias dinâmica */}
       <div className="barra-categorias">
         <div className="barra-categorias-inner">
-          <button className={`cat-pill ${categoriaAtiva === '' ? 'ativo' : ''}`} onClick={() => setCategoriaAtiva('')}>Todos</button>
-          <button className={`cat-pill ${categoriaAtiva === 'governanca' ? 'ativo' : ''}`} onClick={() => setCategoriaAtiva('governanca')}>Governança</button>
-          <button className={`cat-pill ${categoriaAtiva === 'esg' ? 'ativo' : ''}`} onClick={() => setCategoriaAtiva('esg')}>ESG</button>
-          <button className={`cat-pill ${categoriaAtiva === 'carreira' ? 'ativo' : ''}`} onClick={() => setCategoriaAtiva('carreira')}>Carreira</button>
-          <button className={`cat-pill ${categoriaAtiva === 'mercado' ? 'ativo' : ''}`} onClick={() => setCategoriaAtiva('mercado')}>Mercado</button>
+          {categorias.map(cat => (
+            <button
+              key={cat}
+              className={`cat-pill ${(cat === 'Todas' && !categoriaAtiva) || cat === categoriaAtiva ? 'ativo' : ''}`}
+              onClick={() => setCategoria(cat === 'Todas' ? '' : cat)}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
       </div>
 
       <main className="main-artigos">
-        <section className="destaque-container">
-          <div className="destaque-imagem">
-            <img src="https://picsum.photos/id/0/800/500" alt="Imagem do Artigo Destaque" />
-            <span className="destaque-badge"><i className="fa-solid fa-star"></i> Em destaque</span>
-          </div>
-          <div className="destaque-conteudo">
-            <span className="tag tag-governanca">Governança</span>
-            <h2>Importância da Governança Corporativa para Empresas Brasileiras</h2>
-            <p>Como a implementação de boas práticas de governança pode transformar empresas de médio porte em referências de mercado, aumentando credibilidade e atraindo investidores.</p>
-            <div className="destaque-meta">
-              <span><i className="fa-regular fa-calendar"></i> 10 de abril de 2025</span>
-              <span><i className="fa-regular fa-user"></i> João das Neves</span>
-              <span><i className="fa-regular fa-clock"></i> 8 min de leitura</span>
+        {/* Destaque do topo */}
+        {destaque && !carregando && (
+          <section className="destaque-container">
+            <div className="destaque-imagem">
+              <img src={destaque.imagem} alt={destaque.titulo} loading="lazy"
+                   onError={(e) => e.target.src = `https://picsum.photos/seed/${destaque.id}/800/500`} />
+              <span className="destaque-badge"><i className="fa-solid fa-star"></i> Em destaque</span>
             </div>
-            <a href="#" className="btn-ler-mais">Ler artigo completo <i className="fa-solid fa-arrow-right"></i></a>
-          </div>
-        </section>
+            <div className="destaque-conteudo">
+              <span className="tag tag-governanca">{destaque.categoria}</span>
+              <h2>{destaque.titulo}</h2>
+              <p>{destaque.resumo}</p>
+              <div className="destaque-meta">
+                <span><i className="fa-regular fa-calendar"></i> {destaque.data}</span>
+                <span><i className="fa-regular fa-user"></i> {destaque.autor}</span>
+                <span><i className="fa-regular fa-clock"></i> {destaque.leitura} de leitura</span>
+              </div>
+              <a href={destaque.link} target="_blank" rel="noopener" className="btn-ler-mais">
+                Ler artigo completo <i className="fa-solid fa-arrow-right"></i>
+              </a>
+            </div>
+          </section>
+        )}
 
+        {/* Filtros */}
         <div className="filtros-wrapper">
           <div className="filtros-busca">
             <i className="fa-solid fa-magnifying-glass"></i>
-            <input 
-              type="text" 
-              placeholder="Buscar artigos por título ou autor..." 
-              className="input-filtro" 
-              value={termoBusca}
-              onChange={(e) => setTermoBusca(e.target.value)}
+            <input
+              type="text"
+              placeholder="Buscar artigos por título, autor ou palavra-chave..."
+              className="input-filtro"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
             />
+            {busca && (
+              <button className="busca-limpar" onClick={() => setBusca('')} aria-label="Limpar busca">✕</button>
+            )}
           </div>
           <div className="filtros-selects">
             <div className="select-wrapper">
-              <i className="fa-solid fa-tag select-icone"></i>
-              <select value={categoriaAtiva} onChange={(e) => setCategoriaAtiva(e.target.value)}>
-                <option value="">Categoria</option>
-                <option value="governanca">Governança</option>
-                <option value="esg">ESG</option>
-                <option value="carreira">Carreira</option>
-                <option value="mercado">Mercado</option>
-              </select>
-            </div>
-            <div className="select-wrapper">
               <i className="fa-solid fa-arrow-up-wide-short select-icone"></i>
-              <select>
-                <option value="recentes">Mais recentes</option>
-                <option value="antigos">Mais antigos</option>
+              <select value={ordenacao} onChange={(e) => setOrdenacao(e.target.value)}>
+                {ORDENACOES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
           </div>
         </div>
 
+        {/* Cabeçalho da listagem */}
         <div className="secao-cabecalho">
           <div className="secao-titulo">
-            <h2>Todos os artigos</h2>
+            <h2>{busca ? `Resultados para “${busca}”` : 'Todos os artigos'}</h2>
             <hr />
           </div>
-          <span className="artigos-contador">{artigosFiltrados.length} artigos</span>
+          {!carregando && (
+            <span className="artigos-contador">
+              {restoArtigos.length} {restoArtigos.length === 1 ? 'artigo' : 'artigos'}
+            </span>
+          )}
         </div>
 
-        <section className="grid-artigos" style={{ visibility: 'visible' }}>
-          {artigosFiltrados.map((artigo) => (
-            <div className="card-artigo" key={artigo.id}>
-              <div className="card-img-wrapper">
-                <img src={artigo.imagem} alt="Imagem Artigo" />
-                <span className={`tag ${artigo.tagClass}`}>{artigo.tagNome}</span>
-              </div>
-              <div className="card-conteudo">
-                <h3>{artigo.titulo}</h3>
-                <p>{artigo.resumo}</p>
-                <div className="card-rodape">
-                  <div className="meta-info">
-                    <span><i className="fa-regular fa-calendar"></i> {artigo.data}</span>
-                    <span><i className="fa-regular fa-clock"></i> {artigo.tempo}</span>
-                  </div>
-                  <a href="#" className="btn-ler-mais pequeno">Ler <i className="fa-solid fa-arrow-right"></i></a>
+        {/* Grid */}
+        {erro && <div className="estado-erro"><i className="fa-solid fa-triangle-exclamation"></i> {erro}</div>}
+
+        <section className="grid-artigos">
+          {carregando
+            ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
+            : restoArtigos.length === 0
+              ? <div className="estado-vazio">
+                  <i className="fa-solid fa-folder-open"></i>
+                  <strong>Nenhum artigo encontrado</strong>
+                  <p>Tente outra palavra-chave ou remova os filtros.</p>
                 </div>
-              </div>
-            </div>
-          ))}
+              : restoArtigos.map(a => <CardArtigo key={a.id} artigo={a} />)
+          }
         </section>
 
-        {/* Somente o botão, como solicitado */}
-        <button className="btn-carregar-mais">
-          <i className="fa-solid fa-rotate"></i> Carregar mais artigos
-        </button>
+        {/* Sentinela para infinite scroll */}
+        {!carregando && pagina < totalPaginas && (
+          <div ref={sentinelRef} className="sentinela">
+            {carregandoMais && (
+              <div className="loader-inline">
+                <span className="loader-spinner-grande"></span> Carregando mais artigos...
+              </div>
+            )}
+          </div>
+        )}
 
+        {!carregando && pagina >= totalPaginas && artigos.length > 0 && (
+          <div className="fim-da-lista">Você chegou ao fim da lista</div>
+        )}
       </main>
     </>
   );
 }
 
-export default Artigos;
+function CardArtigo({ artigo }) {
+  return (
+    <a href={artigo.link} target="_blank" rel="noopener" className="card-artigo">
+      <div className="card-img-wrapper">
+        <img src={artigo.imagem} alt={artigo.titulo} loading="lazy"
+             onError={(e) => e.target.src = `https://picsum.photos/seed/${artigo.id}/600/360`} />
+        <span className="tag tag-governanca">{artigo.categoria}</span>
+      </div>
+      <div className="card-conteudo">
+        <h3>{artigo.titulo}</h3>
+        <p>{artigo.resumo}</p>
+        <div className="card-rodape">
+          <div className="meta-info">
+            <span><i className="fa-regular fa-calendar"></i> {artigo.data}</span>
+            <span><i className="fa-regular fa-clock"></i> {artigo.leitura}</span>
+          </div>
+          <span className="btn-ler-mais pequeno">Ler <i className="fa-solid fa-arrow-right"></i></span>
+        </div>
+      </div>
+    </a>
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <div className="card-artigo skeleton-card">
+      <div className="sk sk-img"></div>
+      <div className="card-conteudo">
+        <div className="sk sk-line sk-line-curta"></div>
+        <div className="sk sk-line"></div>
+        <div className="sk sk-line"></div>
+        <div className="sk sk-line sk-line-meia"></div>
+        <div className="sk sk-rodape">
+          <div className="sk sk-line sk-line-pequena"></div>
+          <div className="sk sk-line sk-line-btn"></div>
+        </div>
+      </div>
+    </div>
+  );
+}

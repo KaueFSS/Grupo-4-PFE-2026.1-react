@@ -1,11 +1,33 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
   font-family: 'Inter', Arial, sans-serif;
   background-color: #ffffff;
-  color: #000000;
+  color: #0d1b3e;
+  scroll-behavior: smooth;
+}
+
+html { scroll-behavior: smooth; }
+
+/* Animação suave de entrada das páginas */
+.page-fade {
+  animation: pageFade 0.32s ease-out both;
+  min-height: 60vh;
+}
+@keyframes pageFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollbar discreta */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* foco acessível em botões/links */
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid #1a56db;
+  outline-offset: 2px;
+  border-radius: 4px;
 }
