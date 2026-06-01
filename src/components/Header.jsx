@@ -45,26 +45,22 @@ export default function Header() {
   const navigate = useNavigate();
   const termoDebounce = useDebounce(pesquisa, 280);
 
-  // detecta scroll para encolher o header
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // limpa pesquisa e fecha menu ao mudar de rota
   useEffect(() => {
     setMenuAberto(false);
     setFocado(false);
   }, [location.pathname]);
 
-  // bloqueia scroll quando menu mobile está aberto
   useEffect(() => {
     document.body.style.overflow = menuAberto ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [menuAberto]);
 
-  // busca sugestões enquanto o usuário digita
   useEffect(() => {
     if (!termoDebounce.trim()) {
       setSugestoes([]);
@@ -82,7 +78,6 @@ export default function Header() {
     return () => { cancelado = true; };
   }, [termoDebounce]);
 
-  // fecha o dropdown ao clicar fora
   useEffect(() => {
     function onClickFora(e) {
       if (searchBoxRef.current && !searchBoxRef.current.contains(e.target)) {
@@ -134,7 +129,6 @@ export default function Header() {
 
   return (
     <>
-      {/* Top utility bar */}
       <div className="topbar">
         <div className="topbar-inner">
           <div className="topbar-info">
@@ -150,7 +144,6 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Main header */}
       <header className={scrolled ? 'scrolled' : ''}>
         <div className="header-container">
           <Link to="/" className="header-logo-link" onClick={() => setMenuAberto(false)}>
@@ -159,7 +152,6 @@ export default function Header() {
             <span className="logo-texto" style={{ display: 'none' }}>ACBrasil</span>
           </Link>
 
-          {/* Nav desktop */}
           <nav className="nav-desktop">
             {NAV_LINKS.map(link => (
               <Link
@@ -172,7 +164,6 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* Lado direito: pesquisa + CTA */}
           <div className="header-acoes">
             <div ref={searchBoxRef} className={`pesquisa-container ${focado ? 'aberto' : ''}`}>
               <i className="fa-solid fa-magnifying-glass pesquisa-icone"></i>
@@ -292,7 +283,6 @@ export default function Header() {
         </div>
       </header>
 
-      {/* Menu mobile (overlay) */}
       <div className={`menu-mobile ${menuAberto ? 'aberto' : ''}`}>
         <div className="menu-mobile-busca">
           <i className="fa-solid fa-magnifying-glass"></i>

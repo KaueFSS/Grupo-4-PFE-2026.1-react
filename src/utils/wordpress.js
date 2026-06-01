@@ -1,4 +1,3 @@
-// Helpers para conversar com a API do WordPress da ACBrasil
 export const API_WP = 'https://acbrasil.org.br/cms/wp-json/wp/v2';
 
 function stripHtml(html) {
@@ -63,7 +62,6 @@ const ORDEM_MAP = {
   titulo:   { orderby: 'title', order: 'asc'  },
 };
 
-// Busca todas as categorias com artigos publicados
 export async function buscarCategorias() {
   const params = new URLSearchParams({
     per_page: '100',
@@ -77,7 +75,6 @@ export async function buscarCategorias() {
   return dados.map(c => ({ id: c.id, nome: c.name, count: c.count }));
 }
 
-// Busca uma página de artigos com ordenação e filtro de categoria via API
 export async function buscarArtigos({
   pagina = 1,
   porPagina = 9,

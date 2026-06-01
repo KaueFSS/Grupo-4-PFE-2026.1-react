@@ -5,7 +5,6 @@ import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import './App.css';
 
-// Lazy loading: cada página só é baixada quando o usuário a visita pela 1ª vez
 const Home        = lazy(() => import('./pages/Home'));
 const OQueFazemos = lazy(() => import('./pages/OQueFazemos'));
 const Artigos     = lazy(() => import('./pages/Artigos'));

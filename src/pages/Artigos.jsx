@@ -26,17 +26,12 @@ export default function Artigos() {
 
   const buscaDebounce = useDebounce(busca, 400);
   const sentinelRef   = useRef(null);
+  const lastSetQ      = useRef(searchParams.get('q') || '');
 
-  // Guarda o último q= que nós mesmos escrevemos na URL
-  // para distinguir navegação interna vs. vinda do header
-  const lastSetQ = useRef(searchParams.get('q') || '');
-
-  // Busca categorias da API uma única vez
   useEffect(() => {
     buscarCategorias().then(setCategorias).catch(() => {});
   }, []);
 
-  // Sincroniza o input quando a URL ?q= muda externamente (ex: busca do header)
   useEffect(() => {
     const q = searchParams.get('q') || '';
     if (q !== lastSetQ.current) {
@@ -45,14 +40,12 @@ export default function Artigos() {
     }
   }, [searchParams]);
 
-  // Atualiza ?q= na URL após debounce do input
   useEffect(() => {
     lastSetQ.current = buscaDebounce;
     if (buscaDebounce) setSearchParams({ q: buscaDebounce }, { replace: true });
     else               setSearchParams({},                   { replace: true });
   }, [buscaDebounce, setSearchParams]);
 
-  // Refetch sempre que busca, ordenação ou categoria mudar
   useEffect(() => {
     let cancelado = false;
     setCarregando(true);
@@ -72,7 +65,6 @@ export default function Artigos() {
     return () => { cancelado = true; };
   }, [buscaDebounce, ordenacao, categoriaAtiva]);
 
-  // Carrega próxima página (infinite scroll)
   const carregarMais = useCallback(() => {
     if (carregandoMais || pagina >= totalPaginas || carregando) return;
     setMais(true);
@@ -86,7 +78,6 @@ export default function Artigos() {
       .finally(() => setMais(false));
   }, [pagina, totalPaginas, carregandoMais, carregando, buscaDebounce, ordenacao, categoriaAtiva]);
 
-  // IntersectionObserver para infinite scroll
   useEffect(() => {
     if (!sentinelRef.current) return;
     const obs = new IntersectionObserver(
@@ -103,7 +94,6 @@ export default function Artigos() {
 
   return (
     <>
-      {/* Banner */}
       <section className="page-banner">
         <div className="page-banner-conteudo">
           <p className="page-banner-tag"><i className="fa-solid fa-newspaper"></i> Conteúdo</p>
@@ -112,7 +102,6 @@ export default function Artigos() {
         </div>
       </section>
 
-      {/* Barra de categorias vinda da API */}
       <div className="barra-categorias">
         <div className="barra-categorias-inner">
           <button
@@ -134,7 +123,6 @@ export default function Artigos() {
       </div>
 
       <main className="main-artigos">
-        {/* Destaque (apenas sem filtros ativos) */}
         {destaque && !carregando && (
           <section className="destaque-container">
             <div className="destaque-imagem">
@@ -158,7 +146,6 @@ export default function Artigos() {
           </section>
         )}
 
-        {/* Filtros */}
         <div className="filtros-wrapper">
           <div className="filtros-busca">
             <i className="fa-solid fa-magnifying-glass"></i>
@@ -183,7 +170,6 @@ export default function Artigos() {
           </div>
         </div>
 
-        {/* Cabeçalho da listagem */}
         <div className="secao-cabecalho">
           <div className="secao-titulo">
             <h2>{busca ? `Resultados para "${busca}"` : 'Todos os artigos'}</h2>
@@ -202,7 +188,6 @@ export default function Artigos() {
           </div>
         )}
 
-        {/* Grid */}
         <section className="grid-artigos">
           {carregando
             ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
@@ -218,7 +203,6 @@ export default function Artigos() {
           }
         </section>
 
-        {/* Sentinela infinite scroll */}
         {!carregando && pagina < totalPaginas && (
           <div ref={sentinelRef} className="sentinela">
             {carregandoMais && (

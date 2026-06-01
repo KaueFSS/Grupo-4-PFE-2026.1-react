@@ -5,7 +5,6 @@ import '../styles/home.css';
 
 const API_WP = 'https://acbrasil.org.br/cms/wp-json/wp/v2';
 
-// ── Ticker de cotações ──────────────────────────────────────────
 function TickerFinanceiro() {
   const [dolar,   setDolar]   = useState({ valor: '...', variacao: '', classe: '' });
   const [euro,    setEuro]    = useState({ valor: '...', variacao: '', classe: '' });
@@ -118,7 +117,6 @@ function TickerFinanceiro() {
   );
 }
 
-// ── Stat inline elegante com contador animado ──────────────────
 function StatCard({ icon, n, sufixo = '', label }) {
   const [valor, setValor] = useState(0);
 
@@ -154,7 +152,6 @@ function StatCard({ icon, n, sufixo = '', label }) {
   );
 }
 
-// ── Helpers de card ─────────────────────────────────────────────
 const ARTIGOS_FALLBACK = [
   { titulo: 'Governança Corporativa no Brasil', excerpt: 'A importância da governança para empresas brasileiras de todos os portes.', data: '10/04/2025', autor: 'ACBrasil', img: 'https://picsum.photos/400/220?random=1' },
   { titulo: 'O Papel do Conselheiro Moderno',   excerpt: 'Como os conselheiros de administração estão se adaptando ao novo cenário.',  data: '05/03/2025', autor: 'ACBrasil', img: 'https://picsum.photos/400/220?random=2' },
@@ -207,10 +204,9 @@ function CardArtigo({ item, tagClasse, tagLabel }) {
   );
 }
 
-// ── Componente principal ─────────────────────────────────────────
 export default function Home() {
-  const [artigos,   setArtigos]   = useState(null);
-  const [destaque,  setDestaque]  = useState(null);
+  const [artigos,  setArtigos]  = useState(null);
+  const [destaque, setDestaque] = useState(null);
 
   useEffect(() => {
     fetch(`${API_WP}/posts?per_page=3&_embed`)
@@ -228,7 +224,6 @@ export default function Home() {
     <main>
       <TickerFinanceiro />
 
-      {/* Hero */}
       <section className="hero">
         <ShaderBackground />
         <div className="hero-overlay"></div>
@@ -248,7 +243,6 @@ export default function Home() {
             </Link>
           </div>
         </div>
-        {/* Stats elegantes dentro do hero */}
         <div className="hero-stats">
           {[
             { icon: 'fa-users',          n: 500, sufixo: '+', label: 'Associados'         },
@@ -261,7 +255,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Artigos Recentes */}
       <section className="artigos-recentes">
         <div className="secao-cabecalho">
           <h2>Artigos Recentes</h2>
@@ -275,7 +268,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Sobre */}
       <section className="sobre">
         <div className="sobre-conteudo">
           <div className="sobre-texto">
@@ -312,7 +304,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Em Destaque */}
       <section className="em-destaque">
         <div className="secao-cabecalho">
           <h2>Em Destaque</h2>
