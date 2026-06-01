@@ -1,7 +1,6 @@
 // Helpers para conversar com a API do WordPress da ACBrasil
 export const API_WP = 'https://acbrasil.org.br/cms/wp-json/wp/v2';
 
-// remove tags HTML de uma string (decodifica entidades também)
 function stripHtml(html) {
   if (!html) return '';
   const div = document.createElement('div');
@@ -9,7 +8,6 @@ function stripHtml(html) {
   return div.textContent || div.innerText || '';
 }
 
-// formata datas pt-BR em formato curto (10 abr 2026)
 export function formatarData(iso) {
   if (!iso) return '';
   return new Date(iso).toLocaleDateString('pt-BR', {
@@ -19,14 +17,12 @@ export function formatarData(iso) {
   });
 }
 
-// estima tempo de leitura a partir do conteúdo (média 200 palavras/min)
 function tempoLeitura(html) {
   const palavras = stripHtml(html).trim().split(/\s+/).length;
   const min = Math.max(1, Math.round(palavras / 200));
   return `${min} min`;
 }
 
-// normaliza um post bruto da WP-API em um objeto padronizado
 export function parseArtigo(post) {
   const imagem =
     post._embedded?.['wp:featuredmedia']?.[0]?.source_url ||
@@ -61,14 +57,45 @@ export function parseArtigo(post) {
   };
 }
 
-// busca uma página de artigos
-export async function buscarArtigos({ pagina = 1, porPagina = 9, busca = '' } = {}) {
+const ORDEM_MAP = {
+  recentes: { orderby: 'date',  order: 'desc' },
+  antigos:  { orderby: 'date',  order: 'asc'  },
+  titulo:   { orderby: 'title', order: 'asc'  },
+};
+
+// Busca todas as categorias com artigos publicados
+export async function buscarCategorias() {
+  const params = new URLSearchParams({
+    per_page: '100',
+    orderby: 'count',
+    order: 'desc',
+    hide_empty: 'true',
+  });
+  const res = await fetch(`${API_WP}/categories?${params}`);
+  if (!res.ok) return [];
+  const dados = await res.json();
+  return dados.map(c => ({ id: c.id, nome: c.name, count: c.count }));
+}
+
+// Busca uma página de artigos com ordenação e filtro de categoria via API
+export async function buscarArtigos({
+  pagina = 1,
+  porPagina = 9,
+  busca = '',
+  ordenacao = 'recentes',
+  categoriaId = '',
+} = {}) {
+  const { orderby, order } = ORDEM_MAP[ordenacao] ?? ORDEM_MAP.recentes;
+
   const params = new URLSearchParams({
     per_page: String(porPagina),
     page: String(pagina),
     _embed: 'true',
+    orderby,
+    order,
   });
-  if (busca) params.set('search', busca);
+  if (busca)       params.set('search',     busca);
+  if (categoriaId) params.set('categories', String(categoriaId));
 
   const res = await fetch(`${API_WP}/posts?${params}`);
   const total = parseInt(res.headers.get('x-wp-totalpages') || '1', 10);

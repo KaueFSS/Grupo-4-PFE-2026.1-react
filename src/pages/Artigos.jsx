@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import useDebounce from '../hooks/useDebounce';
-import { buscarArtigos } from '../utils/wordpress';
+import { buscarArtigos, buscarCategorias } from '../utils/wordpress';
 import '../styles/artigos.css';
 
 const ORDENACOES = [
@@ -12,88 +12,94 @@ const ORDENACOES = [
 
 export default function Artigos() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [busca, setBusca]               = useState(searchParams.get('q') || '');
-  const [ordenacao, setOrdenacao]       = useState('recentes');
-  const [categoriaAtiva, setCategoria]  = useState('');
-  const [artigos, setArtigos]           = useState([]);
-  const [pagina, setPagina]             = useState(1);
-  const [totalPaginas, setTotalPaginas] = useState(1);
-  const [carregando, setCarregando]     = useState(true);
-  const [carregandoMais, setMais]       = useState(false);
-  const [erro, setErro]                 = useState(null);
 
-  const buscaDebounce = useDebounce(busca, 350);
-  const sentinelRef = useRef(null);
+  const [busca, setBusca]           = useState(() => searchParams.get('q') || '');
+  const [ordenacao, setOrdenacao]   = useState('recentes');
+  const [categoriaAtiva, setCateg]  = useState('');
+  const [categorias, setCategorias] = useState([]);
+  const [artigos, setArtigos]       = useState([]);
+  const [pagina, setPagina]         = useState(1);
+  const [totalPaginas, setTotal]    = useState(1);
+  const [carregando, setCarregando] = useState(true);
+  const [carregandoMais, setMais]   = useState(false);
+  const [erro, setErro]             = useState(null);
 
-  // sincroniza ?q= na URL com o input
+  const buscaDebounce = useDebounce(busca, 400);
+  const sentinelRef   = useRef(null);
+
+  // Guarda o último q= que nós mesmos escrevemos na URL
+  // para distinguir navegação interna vs. vinda do header
+  const lastSetQ = useRef(searchParams.get('q') || '');
+
+  // Busca categorias da API uma única vez
   useEffect(() => {
+    buscarCategorias().then(setCategorias).catch(() => {});
+  }, []);
+
+  // Sincroniza o input quando a URL ?q= muda externamente (ex: busca do header)
+  useEffect(() => {
+    const q = searchParams.get('q') || '';
+    if (q !== lastSetQ.current) {
+      lastSetQ.current = q;
+      setBusca(q);
+    }
+  }, [searchParams]);
+
+  // Atualiza ?q= na URL após debounce do input
+  useEffect(() => {
+    lastSetQ.current = buscaDebounce;
     if (buscaDebounce) setSearchParams({ q: buscaDebounce }, { replace: true });
-    else setSearchParams({}, { replace: true });
+    else               setSearchParams({},                   { replace: true });
   }, [buscaDebounce, setSearchParams]);
 
-  // recarrega ao mudar busca
+  // Refetch sempre que busca, ordenação ou categoria mudar
   useEffect(() => {
     let cancelado = false;
     setCarregando(true);
     setErro(null);
+    setArtigos([]);
     setPagina(1);
 
-    buscarArtigos({ pagina: 1, porPagina: 9, busca: buscaDebounce })
-      .then(({ artigos, totalPaginas }) => {
+    buscarArtigos({ pagina: 1, porPagina: 9, busca: buscaDebounce, ordenacao, categoriaId: categoriaAtiva })
+      .then(({ artigos: dados, totalPaginas }) => {
         if (cancelado) return;
-        setArtigos(artigos);
-        setTotalPaginas(totalPaginas);
+        setArtigos(dados);
+        setTotal(totalPaginas);
       })
       .catch(() => !cancelado && setErro('Não foi possível carregar os artigos.'))
       .finally(() => !cancelado && setCarregando(false));
 
     return () => { cancelado = true; };
-  }, [buscaDebounce]);
+  }, [buscaDebounce, ordenacao, categoriaAtiva]);
 
-  // carrega próxima página
+  // Carrega próxima página (infinite scroll)
   const carregarMais = useCallback(() => {
     if (carregandoMais || pagina >= totalPaginas || carregando) return;
     setMais(true);
     const proxima = pagina + 1;
-    buscarArtigos({ pagina: proxima, porPagina: 9, busca: buscaDebounce })
+    buscarArtigos({ pagina: proxima, porPagina: 9, busca: buscaDebounce, ordenacao, categoriaId: categoriaAtiva })
       .then(({ artigos: novos }) => {
         setArtigos(a => [...a, ...novos]);
         setPagina(proxima);
       })
       .catch(() => {})
       .finally(() => setMais(false));
-  }, [pagina, totalPaginas, carregandoMais, carregando, buscaDebounce]);
+  }, [pagina, totalPaginas, carregandoMais, carregando, buscaDebounce, ordenacao, categoriaAtiva]);
 
-  // observer para infinite scroll
+  // IntersectionObserver para infinite scroll
   useEffect(() => {
     if (!sentinelRef.current) return;
-    const obs = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) carregarMais();
-    }, { rootMargin: '300px' });
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) carregarMais(); },
+      { rootMargin: '300px' }
+    );
     obs.observe(sentinelRef.current);
     return () => obs.disconnect();
   }, [carregarMais]);
 
-  // categorias dinâmicas a partir dos artigos carregados
-  const categorias = useMemo(() => {
-    const set = new Set();
-    artigos.forEach(a => set.add(a.categoria));
-    return ['Todas', ...Array.from(set)];
-  }, [artigos]);
-
-  // ordenação + filtro de categoria (cliente)
-  const artigosVisiveis = useMemo(() => {
-    let lista = [...artigos];
-    if (categoriaAtiva && categoriaAtiva !== 'Todas') {
-      lista = lista.filter(a => a.categoria === categoriaAtiva);
-    }
-    if (ordenacao === 'antigos')  lista.sort((a, b) => new Date(a.dataIso) - new Date(b.dataIso));
-    if (ordenacao === 'titulo')   lista.sort((a, b) => a.titulo.localeCompare(b.titulo, 'pt-BR'));
-    return lista;
-  }, [artigos, categoriaAtiva, ordenacao]);
-
-  const destaque = !busca && !categoriaAtiva ? artigos[0] : null;
-  const restoArtigos = destaque ? artigosVisiveis.filter(a => a.id !== destaque.id) : artigosVisiveis;
+  const temFiltro = busca || categoriaAtiva;
+  const destaque  = !temFiltro && artigos.length > 0 ? artigos[0] : null;
+  const lista     = destaque ? artigos.slice(1) : artigos;
 
   return (
     <>
@@ -106,28 +112,34 @@ export default function Artigos() {
         </div>
       </section>
 
-      {/* Barra de categorias dinâmica */}
+      {/* Barra de categorias vinda da API */}
       <div className="barra-categorias">
         <div className="barra-categorias-inner">
+          <button
+            className={`cat-pill ${!categoriaAtiva ? 'ativo' : ''}`}
+            onClick={() => setCateg('')}
+          >
+            Todas
+          </button>
           {categorias.map(cat => (
             <button
-              key={cat}
-              className={`cat-pill ${(cat === 'Todas' && !categoriaAtiva) || cat === categoriaAtiva ? 'ativo' : ''}`}
-              onClick={() => setCategoria(cat === 'Todas' ? '' : cat)}
+              key={cat.id}
+              className={`cat-pill ${categoriaAtiva === cat.id ? 'ativo' : ''}`}
+              onClick={() => setCateg(prev => prev === cat.id ? '' : cat.id)}
             >
-              {cat}
+              {cat.nome}
             </button>
           ))}
         </div>
       </div>
 
       <main className="main-artigos">
-        {/* Destaque do topo */}
+        {/* Destaque (apenas sem filtros ativos) */}
         {destaque && !carregando && (
           <section className="destaque-container">
             <div className="destaque-imagem">
               <img src={destaque.imagem} alt={destaque.titulo} loading="lazy"
-                   onError={(e) => e.target.src = `https://picsum.photos/seed/${destaque.id}/800/500`} />
+                   onError={(e) => { e.target.src = `https://picsum.photos/seed/${destaque.id}/800/500`; }} />
               <span className="destaque-badge"><i className="fa-solid fa-star"></i> Em destaque</span>
             </div>
             <div className="destaque-conteudo">
@@ -174,33 +186,39 @@ export default function Artigos() {
         {/* Cabeçalho da listagem */}
         <div className="secao-cabecalho">
           <div className="secao-titulo">
-            <h2>{busca ? `Resultados para “${busca}”` : 'Todos os artigos'}</h2>
+            <h2>{busca ? `Resultados para "${busca}"` : 'Todos os artigos'}</h2>
             <hr />
           </div>
           {!carregando && (
             <span className="artigos-contador">
-              {restoArtigos.length} {restoArtigos.length === 1 ? 'artigo' : 'artigos'}
+              {artigos.length} {artigos.length === 1 ? 'artigo' : 'artigos'}
             </span>
           )}
         </div>
 
-        {/* Grid */}
-        {erro && <div className="estado-erro"><i className="fa-solid fa-triangle-exclamation"></i> {erro}</div>}
+        {erro && (
+          <div className="estado-erro">
+            <i className="fa-solid fa-triangle-exclamation"></i> {erro}
+          </div>
+        )}
 
+        {/* Grid */}
         <section className="grid-artigos">
           {carregando
             ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
-            : restoArtigos.length === 0
-              ? <div className="estado-vazio">
+            : lista.length === 0 && !destaque
+              ? (
+                <div className="estado-vazio">
                   <i className="fa-solid fa-folder-open"></i>
                   <strong>Nenhum artigo encontrado</strong>
                   <p>Tente outra palavra-chave ou remova os filtros.</p>
                 </div>
-              : restoArtigos.map(a => <CardArtigo key={a.id} artigo={a} />)
+              )
+              : lista.map(a => <CardArtigo key={a.id} artigo={a} />)
           }
         </section>
 
-        {/* Sentinela para infinite scroll */}
+        {/* Sentinela infinite scroll */}
         {!carregando && pagina < totalPaginas && (
           <div ref={sentinelRef} className="sentinela">
             {carregandoMais && (
@@ -224,7 +242,7 @@ function CardArtigo({ artigo }) {
     <a href={artigo.link} target="_blank" rel="noopener" className="card-artigo">
       <div className="card-img-wrapper">
         <img src={artigo.imagem} alt={artigo.titulo} loading="lazy"
-             onError={(e) => e.target.src = `https://picsum.photos/seed/${artigo.id}/600/360`} />
+             onError={(e) => { e.target.src = `https://picsum.photos/seed/${artigo.id}/600/360`; }} />
         <span className="tag tag-governanca">{artigo.categoria}</span>
       </div>
       <div className="card-conteudo">

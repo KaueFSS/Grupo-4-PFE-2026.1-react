@@ -19,6 +19,22 @@ html { scroll-behavior: smooth; }
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* Spinner de loading para Suspense */
+.page-loading {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.page-loading-spinner {
+  width: 34px; height: 34px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #1a56db;
+  border-radius: 50%;
+  animation: pageSpin 0.7s linear infinite;
+}
+@keyframes pageSpin { to { transform: rotate(360deg); } }
+
 /* Scrollbar discreta */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: #f1f5f9; }
