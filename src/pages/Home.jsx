@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ShaderBackground from '../components/ShaderBackground';
 import '../styles/home.css';
@@ -11,25 +11,6 @@ function TickerFinanceiro() {
   const [libra,   setLibra]   = useState({ valor: '...', variacao: '', classe: '' });
   const [bitcoin, setBitcoin] = useState({ valor: '...', variacao: '', classe: '' });
   const [selic,   setSelic]   = useState('...');
-  const trackRef = useRef(null);
-  const posRef   = useRef(0);
-  const rafRef   = useRef(null);
-
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-
-    function step() {
-      posRef.current += 0.6;
-      const half = track.scrollWidth / 2;
-      if (posRef.current >= half) posRef.current -= half;
-      track.style.transform = `translateX(-${posRef.current}px)`;
-      rafRef.current = requestAnimationFrame(step);
-    }
-
-    rafRef.current = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, []);
 
   useEffect(() => {
     fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,GBP-BRL,BTC-BRL')
@@ -109,7 +90,11 @@ function TickerFinanceiro() {
 
   return (
     <div className="ticker-financeiro">
-      <div className="ticker-track" ref={trackRef}>
+      <div className="ticker-track">
+        {itens}
+        {itens}
+        {itens}
+        {itens}
         {itens}
         {itens}
       </div>
