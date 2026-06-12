@@ -108,7 +108,7 @@ export default function Header() {
   function abrirArtigo(item) {
     setFocado(false);
     setPesquisa('');
-    if (item.link) window.open(item.link, '_blank', 'noopener');
+    if (item.id) navigate(`/artigos/${item.id}`);
     else navigate('/artigos');
   }
 
@@ -146,11 +146,16 @@ export default function Header() {
 
       <header className={scrolled ? 'scrolled' : ''}>
         <div className="header-container">
-          <Link to="/" className="header-logo-link" onClick={() => setMenuAberto(false)}>
+          <button
+            type="button"
+            className="header-logo-link"
+            aria-label="Página inicial — ACBrasil"
+            onClick={() => { setMenuAberto(false); navigate('/'); }}
+          >
             <img src="/logo.png" alt="Logo ACBrasil" className="logo"
                  onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
             <span className="logo-texto" style={{ display: 'none' }}>ACBrasil</span>
-          </Link>
+          </button>
 
           <nav className="nav-desktop">
             {NAV_LINKS.map(link => (

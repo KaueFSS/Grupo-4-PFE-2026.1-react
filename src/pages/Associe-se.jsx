@@ -207,7 +207,7 @@ export default function AssocieSe() {
                         onChange={(e) => setCampo('termos', e.target.checked)}
                       />
                       <label htmlFor="termos">
-                        Li e concordo com a <a href="#">Política de Privacidade</a> e o <a href="#">Código de Conduta</a> da ACBrasil
+                        Li e concordo com a <Link to="/contato">Política de Privacidade</Link> e o <Link to="/contato">Código de Conduta</Link> da ACBrasil
                       </label>
                     </div>
                     {erros.termos && <span className="campo-erro">{erros.termos}</span>}

@@ -25,7 +25,7 @@ export default function Footer() {
           <Link to="/artigos">Artigos</Link>
           <Link to="/quem-somos">Quem Somos</Link>
           <Link to="/o-que-fazemos">O que fazemos</Link>
-          <Link to="/associe-se">Associe-se</Link>
+          <Link to="/contato">Contato</Link>
         </div>
 
         <div className="footer-descricao">
@@ -54,8 +54,7 @@ export default function Footer() {
       <div className="footer-bottom">
         <p>© 2025 ACBrasil — Associação de Conselheiros do Brasil. Todos os direitos reservados.</p>
         <div className="footer-bottom-links">
-          <a href="#">Política de Privacidade</a>
-          <a href="#">LGPD</a>
+          <Link to="/contato">Política de Privacidade &amp; LGPD</Link>
         </div>
       </div>
     </footer>

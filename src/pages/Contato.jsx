@@ -150,8 +150,9 @@ export default function Contato() {
                   <form action="https://formsubmit.co/devwebtms@gmail.com" method="POST" onSubmit={enviar} noValidate>
                     <div className="form-row">
                       <div className="form-group">
-                        <label>Nome completo</label>
+                        <label htmlFor="ct-nome">Nome completo</label>
                         <input
+                          id="ct-nome"
                           type="text"
                           placeholder="Seu nome"
                           value={form.nome}
@@ -161,8 +162,9 @@ export default function Contato() {
                         {erros.nome && <span className="campo-erro">{erros.nome}</span>}
                       </div>
                       <div className="form-group">
-                        <label>E-mail</label>
+                        <label htmlFor="ct-email">E-mail</label>
                         <input
+                          id="ct-email"
                           type="email"
                           placeholder="seu@email.com"
                           value={form.email}
@@ -175,8 +177,9 @@ export default function Contato() {
 
                     <div className="form-row">
                       <div className="form-group">
-                        <label>Telefone <span className="opcional">(opcional)</span></label>
+                        <label htmlFor="ct-telefone">Telefone <span className="opcional">(opcional)</span></label>
                         <input
+                          id="ct-telefone"
                           type="tel"
                           placeholder="(11) 99999-9999"
                           value={form.telefone}
@@ -184,8 +187,9 @@ export default function Contato() {
                         />
                       </div>
                       <div className="form-group">
-                        <label>Assunto</label>
+                        <label htmlFor="ct-assunto">Assunto</label>
                         <select
+                          id="ct-assunto"
                           value={form.assunto}
                           onChange={(e) => setCampo('assunto', e.target.value)}
                           className={erros.assunto ? 'input-erro' : ''}
@@ -198,11 +202,12 @@ export default function Contato() {
                     </div>
 
                     <div className="form-group">
-                      <label>
+                      <label htmlFor="ct-mensagem">
                         Mensagem
                         <span className="contador-chars">{form.mensagem.length}/500</span>
                       </label>
                       <textarea
+                        id="ct-mensagem"
                         rows={6}
                         maxLength={500}
                         placeholder="Como podemos ajudar?"

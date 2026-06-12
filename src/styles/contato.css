@@ -180,8 +180,8 @@
   font-weight: 600;
   display: flex; justify-content: space-between; align-items: center;
 }
-.opcional { font-weight: 400; color: #94a3b8; font-size: 11px; }
-.contador-chars { font-weight: 400; color: #94a3b8; font-size: 11px; }
+.opcional { font-weight: 400; color: #5b6776; font-size: 11px; }
+.contador-chars { font-weight: 400; color: #5b6776; font-size: 11px; }
 
 .form-group input,
 .form-group select,
@@ -242,7 +242,7 @@
 .form-disclaimer {
   margin-top: 12px;
   text-align: center;
-  font-size: 12px; color: #94a3b8;
+  font-size: 12px; color: #5b6776;
   display: flex; align-items: center; justify-content: center; gap: 6px;
 }
 

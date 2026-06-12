@@ -8,6 +8,7 @@ import './App.css';
 const Home        = lazy(() => import('./pages/Home'));
 const OQueFazemos = lazy(() => import('./pages/OQueFazemos'));
 const Artigos     = lazy(() => import('./pages/Artigos'));
+const Artigo      = lazy(() => import('./pages/Artigo'));
 const AssocieSe   = lazy(() => import('./pages/Associe-se'));
 const QuemSomos   = lazy(() => import('./pages/QuemSomos'));
 const Contato     = lazy(() => import('./pages/Contato'));
@@ -31,6 +32,7 @@ function App() {
             <Route path="/"              element={<Home />} />
             <Route path="/o-que-fazemos" element={<OQueFazemos />} />
             <Route path="/artigos"       element={<Artigos />} />
+            <Route path="/artigos/:id"   element={<Artigo />} />
             <Route path="/associe-se"    element={<AssocieSe />} />
             <Route path="/quem-somos"    element={<QuemSomos />} />
             <Route path="/contato"       element={<Contato />} />

@@ -27,7 +27,7 @@ function FounderCard({ founder }) {
   return (
     <a className="founder-card" href={founder.linkedin} target="_blank" rel="noopener noreferrer">
       <div className="founder-image">
-        <img src={founder.image} alt={founder.name} loading="lazy"
+        <img src={founder.image} alt="" loading="lazy"
              onError={(e) => e.target.src = `https://ui-avatars.com/api/?background=0d1b3e&color=f5c518&size=300&name=${encodeURIComponent(founder.name)}`} />
         <div className="founder-overlay">
           <span><i className="fa-brands fa-linkedin"></i> Ver LinkedIn</span>

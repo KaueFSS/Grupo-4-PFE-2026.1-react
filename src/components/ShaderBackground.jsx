@@ -153,29 +153,43 @@ export default function ShaderBackground({ className = '' }) {
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
 
-    let rafId;
-    let visible = true;
-    const onVis = () => { visible = !document.hidden; if (visible) start(); };
-    document.addEventListener('visibilitychange', onVis);
+    let rafId = null;
+    let docVisible = !document.hidden;
+    let onScreen = true;
+    const inicio = Date.now();
 
-    const start = Date.now();
-    function tick() {
-      if (!visible) return;
+    function frame() {
+      rafId = null;
+      if (!docVisible || !onScreen) return;
       gl.useProgram(program);
       gl.uniform2f(uRes, canvas.width, canvas.height);
-      gl.uniform1f(uTime, (Date.now() - start) / 1000);
+      gl.uniform1f(uTime, (Date.now() - inicio) / 1000);
 
       gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
       gl.enableVertexAttribArray(aPos);
       gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-      rafId = requestAnimationFrame(tick);
+      agendar();
     }
-    tick();
+    function agendar() {
+      if (rafId == null && docVisible && onScreen) rafId = requestAnimationFrame(frame);
+    }
+
+    const onVis = () => { docVisible = !document.hidden; agendar(); };
+    document.addEventListener('visibilitychange', onVis);
+
+    const io = new IntersectionObserver(([entry]) => {
+      onScreen = entry.isIntersecting;
+      agendar();
+    }, { threshold: 0 });
+    io.observe(canvas);
+
+    agendar();
 
     return () => {
-      cancelAnimationFrame(rafId);
+      if (rafId != null) cancelAnimationFrame(rafId);
       ro.disconnect();
+      io.disconnect();
       document.removeEventListener('visibilitychange', onVis);
     };
   }, []);

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ShaderBackground from '../components/ShaderBackground';
+import { comCache } from '../utils/cache';
 import '../styles/home.css';
 
 const API_WP = 'https://acbrasil.org.br/cms/wp-json/wp/v2';
@@ -164,15 +165,23 @@ function parsearArtigo(artigo, idx) {
   div.innerHTML = artigo.title?.rendered || 'Sem título';
   const titulo = div.textContent;
 
-  return { titulo, excerpt, data, autor, img, link: artigo.link };
+  const matchNum = titulo.match(/n[º°]\s*(\d{1,4})/i);
+  const numero = matchNum ? matchNum[1] : null;
+
+  return { id: artigo.id, titulo, excerpt, data, autor, img, link: artigo.link, numero };
 }
 
 function CardArtigo({ item, tagClasse, tagLabel }) {
   return (
     <div className="card-artigo">
-      <img src={item.img} alt={item.titulo} onError={e => e.target.src = 'https://picsum.photos/400/220?random=99'} />
+      <div className="card-img-wrap">
+        <img src={item.img} alt="" onError={e => e.target.src = 'https://picsum.photos/400/220?random=99'} />
+      </div>
       <div className="card-conteudo">
-        <span className={`tag ${tagClasse}`}>{tagLabel}</span>
+        <div className="card-tags-linha">
+          <span className={`tag ${tagClasse}`}>{tagLabel}</span>
+          {item.numero && <span className="card-edicao">Newsletter Nº {item.numero}</span>}
+        </div>
         <h3>{item.titulo}</h3>
         <p>{item.excerpt}</p>
         <div className="card-rodape">
@@ -180,9 +189,9 @@ function CardArtigo({ item, tagClasse, tagLabel }) {
             <span>📅 {item.data}</span>
             <span>👤 {item.autor}</span>
           </div>
-          <a href={item.link || '/artigos'} target={item.link ? '_blank' : '_self'} rel="noopener" className="btn-ler-mais pequeno">
+          <Link to={item.id ? `/artigos/${item.id}` : '/artigos'} className="btn-ler-mais pequeno">
             Ler mais ›
-          </a>
+          </Link>
         </div>
       </div>
     </div>
@@ -194,15 +203,17 @@ export default function Home() {
   const [destaque, setDestaque] = useState(null);
 
   useEffect(() => {
-    fetch(`${API_WP}/posts?per_page=3&_embed`)
-      .then(r => r.json())
-      .then(data => setArtigos(data.map((a, i) => parsearArtigo(a, i))))
-      .catch(() => setArtigos(ARTIGOS_FALLBACK));
+    comCache('home_artigos', async () => {
+      const r = await fetch(`${API_WP}/posts?per_page=3&_embed`);
+      const data = await r.json();
+      return data.map((a, i) => parsearArtigo(a, i));
+    }).then(setArtigos).catch(() => setArtigos(ARTIGOS_FALLBACK));
 
-    fetch(`${API_WP}/posts?per_page=3&offset=3&_embed`)
-      .then(r => r.json())
-      .then(data => setDestaque(data.map((a, i) => parsearArtigo(a, i + 10))))
-      .catch(() => setDestaque(DESTAQUE_FALLBACK));
+    comCache('home_destaque', async () => {
+      const r = await fetch(`${API_WP}/posts?per_page=3&offset=3&_embed`);
+      const data = await r.json();
+      return data.map((a, i) => parsearArtigo(a, i + 10));
+    }).then(setDestaque).catch(() => setDestaque(DESTAQUE_FALLBACK));
   }, []);
 
   return (

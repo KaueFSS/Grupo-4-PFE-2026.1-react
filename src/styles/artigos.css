@@ -37,7 +37,6 @@
   background: #f7f9fc;
   border-bottom: 1px solid #e8edf5;
   position: sticky; top: 120px; z-index: 50;
-  backdrop-filter: blur(8px);
 }
 .barra-categorias-inner {
   max-width: 1300px; margin: 0 auto;
@@ -98,7 +97,7 @@
 .destaque-conteudo p  { font-size: 15px; color: #4a5568; line-height: 1.7; }
 .destaque-meta {
   display: flex; gap: 18px; flex-wrap: wrap;
-  font-size: 12.5px; color: #94a3b8;
+  font-size: 12.5px; color: #5b6776;
   margin: 4px 0 6px;
 }
 .destaque-meta span { display: inline-flex; align-items: center; gap: 6px; }
@@ -126,7 +125,7 @@
 }
 .filtros-busca i.fa-magnifying-glass {
   position: absolute; left: 16px;
-  color: #94a3b8; font-size: 14px;
+  color: #5b6776; font-size: 14px;
 }
 .input-filtro {
   width: 100%;
@@ -153,7 +152,7 @@
 .select-wrapper { position: relative; }
 .select-icone {
   position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-  color: #94a3b8; font-size: 12px; pointer-events: none;
+  color: #5b6776; font-size: 12px; pointer-events: none;
 }
 .select-wrapper select {
   appearance: none;
@@ -203,16 +202,25 @@
   box-shadow: 0 14px 36px rgba(13,27,62,0.12);
   border-color: #c4d0e8;
 }
-.card-img-wrapper { position: relative; overflow: hidden; }
+.card-img-wrapper { position: relative; overflow: hidden; aspect-ratio: 10 / 7; background: #fff; }
 .card-img-wrapper img {
-  width: 100%; height: 190px; object-fit: cover;
+  width: 100%; height: 100%; object-fit: cover; object-position: top center;
   transition: transform 0.4s ease;
 }
 .card-artigo:hover .card-img-wrapper img { transform: scale(1.05); }
-.card-img-wrapper .tag {
+.card-img-tags {
   position: absolute; top: 12px; left: 12px;
-  backdrop-filter: blur(6px);
-  background: rgba(255,255,255,0.92);
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.card-img-wrapper .tag {
+  background: #fff;
+}
+.card-edicao-art {
+  display: inline-flex; align-items: center;
+  background: #0d1b3e; color: #f5c518;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.3px;
+  padding: 3px 11px; border-radius: 20px;
+  border: 1px solid rgba(245,197,24,0.45);
 }
 
 .card-conteudo {
@@ -239,7 +247,7 @@
   border-top: 1px solid #f1f5f9;
   gap: 8px;
 }
-.meta-info { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; color: #94a3b8; }
+.meta-info { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; color: #5b6776; }
 .meta-info span { display: inline-flex; align-items: center; gap: 5px; }
 
 .btn-ler-mais {
@@ -308,7 +316,7 @@
 
 .fim-da-lista {
   text-align: center; padding: 30px 20px;
-  color: #94a3b8; font-size: 13px;
+  color: #5b6776; font-size: 13px;
 }
 
 @media (max-width: 900px) {

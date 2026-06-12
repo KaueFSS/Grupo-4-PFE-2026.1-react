@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import useDebounce from '../hooks/useDebounce';
 import { buscarArtigos, buscarCategorias } from '../utils/wordpress';
 import '../styles/artigos.css';
@@ -126,7 +126,7 @@ export default function Artigos() {
         {destaque && !carregando && (
           <section className="destaque-container">
             <div className="destaque-imagem">
-              <img src={destaque.imagem} alt={destaque.titulo} loading="lazy"
+              <img src={destaque.imagem} alt="" loading="lazy"
                    onError={(e) => { e.target.src = `https://picsum.photos/seed/${destaque.id}/800/500`; }} />
               <span className="destaque-badge"><i className="fa-solid fa-star"></i> Em destaque</span>
             </div>
@@ -139,9 +139,9 @@ export default function Artigos() {
                 <span><i className="fa-regular fa-user"></i> {destaque.autor}</span>
                 <span><i className="fa-regular fa-clock"></i> {destaque.leitura} de leitura</span>
               </div>
-              <a href={destaque.link} target="_blank" rel="noopener" className="btn-ler-mais">
+              <Link to={`/artigos/${destaque.id}`} className="btn-ler-mais">
                 Ler artigo completo <i className="fa-solid fa-arrow-right"></i>
-              </a>
+              </Link>
             </div>
           </section>
         )}
@@ -152,6 +152,7 @@ export default function Artigos() {
             <input
               type="text"
               placeholder="Buscar artigos por título, autor ou palavra-chave..."
+              aria-label="Buscar artigos"
               className="input-filtro"
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
@@ -163,7 +164,7 @@ export default function Artigos() {
           <div className="filtros-selects">
             <div className="select-wrapper">
               <i className="fa-solid fa-arrow-up-wide-short select-icone"></i>
-              <select value={ordenacao} onChange={(e) => setOrdenacao(e.target.value)}>
+              <select value={ordenacao} onChange={(e) => setOrdenacao(e.target.value)} aria-label="Ordenar artigos">
                 {ORDENACOES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
@@ -223,11 +224,14 @@ export default function Artigos() {
 
 function CardArtigo({ artigo }) {
   return (
-    <a href={artigo.link} target="_blank" rel="noopener" className="card-artigo">
+    <Link to={`/artigos/${artigo.id}`} className="card-artigo">
       <div className="card-img-wrapper">
-        <img src={artigo.imagem} alt={artigo.titulo} loading="lazy"
+        <img src={artigo.imagem} alt="" loading="lazy"
              onError={(e) => { e.target.src = `https://picsum.photos/seed/${artigo.id}/600/360`; }} />
-        <span className="tag tag-governanca">{artigo.categoria}</span>
+        <div className="card-img-tags">
+          <span className="tag tag-governanca">{artigo.categoria}</span>
+          {artigo.numero && <span className="card-edicao-art">Newsletter Nº {artigo.numero}</span>}
+        </div>
       </div>
       <div className="card-conteudo">
         <h3>{artigo.titulo}</h3>
@@ -240,7 +244,7 @@ function CardArtigo({ artigo }) {
           <span className="btn-ler-mais pequeno">Ler <i className="fa-solid fa-arrow-right"></i></span>
         </div>
       </div>
-    </a>
+    </Link>
   );
 }
 

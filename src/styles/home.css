@@ -130,10 +130,9 @@
   align-items: center;
   gap: 14px;
   padding: 14px 28px;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
-  backdrop-filter: blur(8px);
   transition: background 0.25s, border-color 0.25s, transform 0.25s;
 }
 .stat-item:hover {
@@ -200,10 +199,19 @@
   transition: transform 0.2s, box-shadow 0.2s;
 }
 .card-artigo:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(13,27,62,0.12); }
-.card-artigo img { width: 100%; height: 190px; object-fit: contain; background: #f4f7fb; padding: 6px; }
+.card-img-wrap { width: 100%; aspect-ratio: 10 / 7; overflow: hidden; background: #fff; }
+.card-artigo img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
+.card-tags-linha { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.card-edicao {
+  display: inline-flex; align-items: center;
+  background: #0d1b3e; color: #f5c518;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.5px;
+  padding: 3px 11px; border-radius: 20px;
+  border: 1px solid rgba(245,197,24,0.45);
+}
 .card-conteudo { padding: 18px; display: flex; flex-direction: column; flex: 1; }
 .card-conteudo h3 { font-size: 15px; color: #0d1b3e; margin: 8px 0 10px; line-height: 1.4; }
-.card-conteudo p { font-size: 13px; color: #718096; line-height: 1.6; flex: 1; }
+.card-conteudo p { font-size: 13px; color: #5b6776; line-height: 1.6; flex: 1; }
 
 .tag { display: inline-block; font-size: 11px; font-weight: bold; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
 .tag-governanca { background-color: #ebf4ff; color: #1a56db; }
@@ -236,7 +244,7 @@
 .numero-item:hover { box-shadow: 0 4px 16px rgba(13,27,62,0.08); }
 .numero-icone { font-size: 22px; color: #f5c518; margin-bottom: 4px; }
 .numero { font-size: 30px; font-weight: bold; color: #0d1b3e; line-height: 1; }
-.numero-label { font-size: 12px; color: #718096; }
+.numero-label { font-size: 12px; color: #5b6776; }
 
 /* EM DESTAQUE */
 .em-destaque { padding: 44px 30px; max-width: 1200px; margin: 0 auto; }
