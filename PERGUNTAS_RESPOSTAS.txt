@@ -1,0 +1,278 @@
+PERGUNTAS QUE O PROFESSOR PODE FAZER - COM AS RESPOSTAS CERTAS
+Site ACBrasil - Grupo 4 PFE 2026.1
+================================================================
+
+
+---- SOBRE REACT E ESTRUTURA GERAL ----
+
+
+P: Por que vocês usaram React nesse projeto?
+
+R: Porque o site tem bastante interatividade: busca em tempo real,
+filtros de categoria, infinite scroll, formulários com validação...
+Para gerenciar tudo isso com JavaScript puro ia ficar bem complicado.
+O React organiza isso em componentes com estado, o que deixou o código
+mais fácil de manter e dividir entre a equipe.
+
+
+P: O que é esse lazy e Suspense que vocês usaram no App.jsx?
+
+R: É code splitting. Em vez de carregar o código de todas as páginas
+quando o usuário entra no site, cada página só é carregada quando ele
+navega até ela. O lazy(() => import('./pages/Home')) faz isso. O Suspense
+é o componente que envolve as rotas e mostra um spinner enquanto a página
+ainda está carregando. Isso deixa o carregamento inicial bem mais rápido
+porque o browser não precisa baixar tudo de uma vez.
+
+
+P: Como funciona o roteamento de vocês?
+
+R: Usamos o React Router DOM v7. No App.jsx tem um BrowserRouter que
+envolve tudo, e dentro dele um Routes com um Route pra cada página.
+As URLs são /artigos, /quem-somos, /o-que-fazemos, /associe-se e
+/contato. Tem também um componente ScrollToTop que a gente criou
+pra resetar o scroll pro topo sempre que muda de página, porque o
+React Router por padrão não faz isso.
+
+
+P: Quais hooks vocês usaram?
+
+R: useState pra estado local (busca, filtros, dados carregados),
+useEffect pra efeitos colaterais (chamadas de API, event listeners,
+animações), useRef pra referenciar elementos do DOM sem causar
+re-render (o canvas do WebGL, o sentinel do infinite scroll, a
+caixinha da busca), useCallback na função de carregar mais artigos
+pra não recriar a função toda vez, useMemo na página O Que Fazemos
+pra filtrar o array só quando o filtro muda, e um hook próprio
+chamado useDebounce que a gente criou.
+
+
+P: O que é o useDebounce e por que vocês criaram um ao invés de usar
+uma biblioteca?
+
+R: O useDebounce atrasa a execução de uma função enquanto o usuário
+ainda está digitando. Quando o usuário digita na busca, a gente não
+quer chamar a API a cada letra, então espera 280ms depois que ele
+parar. A implementação é simples: um useState que armazena o valor
+atrasado, e um useEffect com setTimeout que atualiza esse valor.
+Quando o value muda antes do tempo acabar, o useEffect faz cleanup
+e cancela o timeout anterior com clearTimeout. Não fazia sentido
+instalar uma biblioteca inteira pra isso sendo que são 10 linhas.
+
+
+---- SOBRE AS APIs ----
+
+
+P: Que APIs externas vocês usaram?
+
+R: Três. A API REST do WordPress da própria ACBrasil, que fica em
+acbrasil.org.br/cms/wp-json/wp/v2 e retorna os artigos reais do
+site deles. A Awesome API em economia.awesomeapi.com.br que devolve
+cotações de câmbio em tempo real (dólar, euro, libra, bitcoin) em
+formato JSON. E a API do Banco Central do Brasil em api.bcb.gov.br
+que retorna a taxa Selic atual.
+
+
+P: Como vocês consomem a API do WordPress?
+
+R: Fizemos um arquivo utilitário em src/utils/wordpress.js com funções
+assíncronas. A buscarArtigos recebe parametros como pagina, porPagina,
+busca, ordenacao e categoriaId, monta uma URLSearchParams com esses
+valores e faz um fetch para o endpoint /posts. O WordPress devolve o
+total de páginas no header x-wp-totalpages, que a gente lê com
+res.headers.get('x-wp-totalpages'). Ai tem a parseArtigo que
+normaliza cada post que vem da API, extrai imagem featured, autor,
+tempo de leitura estimado e limpa o HTML com document.createElement.
+
+
+P: Como vocês calculam o tempo de leitura?
+
+R: Tem uma função tempoLeitura em wordpress.js que recebe o HTML do
+conteúdo, remove as tags com um div.textContent, divide o texto por
+espaços pra contar as palavras e divide por 200 (uma média de palavras
+por minuto de leitura). Arredonda pra cima e exibe como "X min".
+
+
+P: O que acontece se a API falhar?
+
+R: Em todos os lugares que a gente usa a API tem um .catch(). Na home,
+se a API do WordPress falhar, aparece um array de artigos de fallback
+que a gente definiu no próprio arquivo. Se a API de câmbio falhar,
+simplesmente não atualiza o valor (continua mostrando "..."). Na
+página de artigos, aparece uma mensagem de erro na tela. A API do
+Banco Central tem um catch que coloca "indisponível" no lugar da Selic.
+
+
+---- SOBRE FUNCIONALIDADES ESPECIFICAS ----
+
+
+P: Como funciona o sistema de filtro na página O Que Fazemos?
+
+R: É bem direto. Tem um array chamado areas com os 12 cards, cada um
+com uma propriedade cat que pode ser 'estrategia', 'pessoas' ou
+'negocios'. Tem um useState chamado filtroAtivo que começa como 'all'.
+Quando o usuário clica num botão de filtro, atualiza o filtroAtivo.
+O array que é renderizado é calculado com useMemo: se filtroAtivo
+for 'all' retorna todos, senão filtra por .cat === filtroAtivo.
+O useMemo evita recalcular quando outros estados mudam, só recalcula
+quando filtroAtivo muda.
+
+
+P: Como funciona o infinite scroll na página de artigos?
+
+R: Usamos IntersectionObserver. Tem um elemento div vazio no fim da
+lista chamado sentinela, referenciado com um useRef. Um useEffect
+cria um IntersectionObserver que observa esse elemento. Quando ele
+fica visível na tela (com rootMargin de 300px, ou seja, começa a
+carregar 300px antes de chegar no fim), chama a função carregarMais.
+Essa função busca a próxima página na API e concatena os novos artigos
+no estado com setArtigos(a => [...a, ...novos]).
+
+
+P: Como funciona a busca no header?
+
+R: O campo de texto atualiza o estado pesquisa a cada letra. Esse
+valor passa pelo useDebounce com 280ms. Quando o valor debounced muda,
+um useEffect chama a buscarArtigos da API WordPress com porPagina: 5
+e o termo de busca. Enquanto espera, mostra um spinner. O dropdown
+tem três estados: se o campo tiver vazio, mostra histórico recente e
+temas populares; se tiver carregando, mostra o spinner; se tiver
+resultado, mostra os cards de artigos. Tem navegação por teclado com
+setas: ArrowDown e ArrowUp mexem no indiceAtivo, Enter abre o item
+ativo ou executa a busca, Escape fecha o dropdown.
+
+
+P: Como vocês salvaram o histórico de buscas?
+
+R: No localStorage. Tem duas funções no Header: carregarRecentes que
+faz um JSON.parse do item acb_buscas, e salvarRecentes que faz
+JSON.stringify e guarda. Quando o usuário pesquisa algo, o termo novo
+é colocado na frente do array e o .slice(0, 5) garante que só guarda
+os últimos 5. Se o usuário clica no X ao lado de um item, ele é
+removido com .filter() e o localStorage é atualizado.
+
+
+P: O que é o pattern de cleanup com a variável cancelado nos useEffects?
+
+R: É pra evitar atualizar estado em componente desmontado. Se o
+usuário digitar rápido e a página mudar antes da requisição terminar,
+o componente vai ter sido desmontado mas a requisição ainda resolve.
+Se chamar setSugestoes depois disso, o React avisa de memory leak.
+A solução é declarar let cancelado = false no effect, passar pro .then
+um if (!cancelado), e no return do effect fazer cancelado = true. Assim
+se o effect for limpo antes da promise resolver, não atualiza estado.
+
+
+P: Como vocês sincronizaram a busca com a URL na página de artigos?
+
+R: Com o useSearchParams do React Router. Quando o usuário digita
+na busca, o buscaDebounce atualiza a URL com setSearchParams({ q: termo }).
+Isso permite que o usuário copie e cole a URL e chegue no mesmo resultado.
+Quando a URL muda por fora (tipo vindo da busca do header), o useEffect
+que observa searchParams detecta a mudança e atualiza o estado de busca.
+
+
+P: Como vocês fizeram o ticker do câmbio?
+
+R: Tem um useRef chamado trackRef que referencia a div com os itens.
+Um useEffect roda requestAnimationFrame em loop, incrementando uma
+posição a cada frame em 0.6px. A div tem dois grupos de itens iguais.
+Quando a posição chega na metade do scrollWidth (ou seja, passou o
+primeiro grupo inteiro), reseta a posição subtraindo essa metade.
+Assim fica um loop infinito que parece contínuo. O cancelAnimationFrame
+no return do useEffect cancela o loop quando o componente desmonta.
+
+
+P: Como o header muda quando o usuário rola a página?
+
+R: Tem um state chamado scrolled que começa false. No useEffect tem um
+addEventListener no window para o evento scroll com passive: true (que
+é uma boa prática de performance). O callback verifica se window.scrollY
+é maior que 30, se for muda scrolled pra true. O header recebe a
+classe CSS scrolled condicionalmente, e no CSS essa classe tem um
+background mais sólido e uma sombra. O cleanup do useEffect remove
+o event listener.
+
+
+---- SOBRE DESIGN E CSS ----
+
+
+P: Por que vocês não usaram Tailwind ou Bootstrap?
+
+R: Porque o projeto tem uma identidade visual bem específica, com
+paleta de cores definida, animações customizadas e cards com hover
+efeitos que seriam difíceis de fazer dentro dos limites de um framework.
+Com CSS próprio a gente tem controle total. Bootstrap ia impor um
+visual genérico que não combinou com o que queríamos.
+
+
+P: Como vocês fizeram o efeito de animação dos números na home?
+
+R: Com IntersectionObserver e requestAnimationFrame. O componente
+StatCard recebe o número final como prop. Quando o elemento entra
+na viewport (com threshold de 0.4, ou seja, 40% visível), inicia
+a animação. Usa performance.now() pra medir tempo e aplica uma
+curva de easing cúbica: ease = 1 - Math.pow(1 - p, 3). Isso faz
+o número acelerar no começo e desacelerar no fim. A duração é 1400ms.
+
+
+P: Como funciona o ShaderBackground? O que é WebGL e GLSL?
+
+R: WebGL é uma API do browser pra desenhar gráficos 3D na GPU usando
+o elemento canvas. GLSL é a linguagem de programação dos shaders,
+que roda direto na placa de vídeo. O ShaderBackground cria um canvas
+que cobre o hero inteiro. O vertex shader posiciona um quadrado que
+cobre a tela toda. O fragment shader é o que define a cor de cada pixel:
+pega a posição e o tempo como entrada, aplica funções de ruído cosseno
+pra criar as ondas que se movem, e mistura com as cores navy do site.
+A animação roda a 60fps porque usa requestAnimationFrame. Quando a aba
+fica em segundo plano, o visibilitychange pausa a animação.
+
+
+P: Como vocês fizeram o fallback de imagem dos fundadores e dos artigos?
+
+R: Com o evento onError do elemento img. Se a imagem falhar em carregar,
+o React dispara o onError e ali a gente troca o src. Para artigos, usa
+picsum.photos com a seed do id do artigo para sempre gerar a mesma imagem
+aleatória pro mesmo artigo. Para os fundadores, usa ui-avatars.com que
+gera uma imagem com as iniciais do nome automaticamente.
+
+
+---- SOBRE BOAS PRATICAS ----
+
+
+P: Como vocês organizaram o projeto?
+
+R: Por responsabilidade. Pasta pages com as páginas, components com
+os componentes reutilizados em várias páginas (Header, Footer,
+ShaderBackground, ScrollToTop), hooks pra hooks customizados,
+utils pra lógica de integração com API, styles com um CSS por
+página ou componente. Isso facilitou cada um trabalhar na sua
+parte sem conflito.
+
+
+P: O que é o passive: true no addEventListener do scroll?
+
+R: É uma dica pro browser de que o event listener não vai chamar
+preventDefault no evento de scroll. O browser pode então otimizar
+a rolagem sem esperar o JavaScript responder, o que deixa o scroll
+mais fluido. É uma boa prática pra event listeners de scroll e touch.
+
+
+P: Por que o useCallback na função carregarMais de Artigos.jsx?
+
+R: Porque a função carregarMais é uma dependência do useEffect do
+IntersectionObserver. Se carregarMais fosse recriada a cada render,
+o useEffect ia rodar de novo, desconectar e reconectar o observer
+toda hora. Com useCallback, a função só é recriada quando uma das
+dependências dela muda (pagina, totalPaginas, etc.), o que faz o
+observer ser recriado só quando realmente necessário.
+
+
+P: Vocês tiveram problemas de CORS com as APIs?
+
+R: Com a API do WordPress sim, em desenvolvimento. Resolvemos usando
+o proxy do Vite no vite.config.js durante o desenvolvimento. Em
+produção o servidor da ACBrasil já estava configurado pra aceitar
+as requisições. A Awesome API e a do Banco Central são públicas
+e não têm restrição de CORS.

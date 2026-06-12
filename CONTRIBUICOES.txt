@@ -1,0 +1,154 @@
+GRUPO 4 - PFE 2026.1
+Site ACBrasil - Associação de Conselheiros do Brasil
+
+
+O QUE FOI PENSADO PRA ESSE PROJETO
+
+A ideia principal era fazer um site que representasse bem uma associação
+de governança corporativa, algo que parecesse sólido e profissional, mas
+que não fosse aquele negócio engessado e sem vida que a maioria dos sites
+do setor tem. Queríamos que a pessoa abrisse e já sentisse que era uma
+organização séria, mas moderna.
+
+O design inteiro girou em torno de uma paleta navy mais dourado. O azul escuro
+passou credibilidade e seriedade, e o dourado entrou como acento pra dar
+sofisticação sem exagerar. É uma combinação clássica de mercado financeiro
+que cabia muito bem pro perfil da ACBrasil.
+
+A animação de fundo (aquele efeito que fica no hero) foi feita com WebGL
+puro, shader em GLSL mesmo. A gente poderia ter usado uma biblioteca pronta
+tipo three.js, mas isso ia pesar demais pra um efeito que é só pra criar
+atmosfera. Com shader direto, fica leve e roda bem até em máquina fraca.
+O visual foi pensado pra remeter a linhas de grade financeiras, como se
+fosse um gráfico se movendo, dá aquele clima de mercado de capitais sem
+precisar colocar nenhuma imagem de bolsa de valores no site.
+
+O ticker de câmbio na home foi ideia pra conectar o site com o cotidiano
+do usuário. Conselheiros corporativos vivem de olho em câmbio, Selic,
+indicadores, então colocar isso rodando ali em cima foi uma forma de já
+mostrar que o site entende o público.
+
+A parte de animação nos números (500+ membros, 15+ anos etc.) foi pensada
+pra criar aquela sensação de conquista quando o usuário chega naquele
+bloco. Em vez de só aparecer o número estático, ele conta até chegar
+no valor. Parece bobo mas chama atenção e passa credibilidade.
+
+A busca foi um ponto que a gente quis fazer direito. Não era só um campo
+de texto, era uma experiência: histórico de pesquisas recentes, tópicos
+populares em formato de pilula, sugestão de artigos em tempo real com
+debounce pra não sobrecarregar a API, navegação por teclado. Parece
+detalhe, mas faz muita diferença na percepção de qualidade do site.
+
+Toda a parte de artigos foi conectada com a API do WordPress da ACBrasil,
+conteúdo real, não fictício. Isso foi importante porque o site não é
+só um protótipo, é algo que pode ser colocado em produção.
+
+
+O QUE CADA UM FEZ
+
+
+KAUE
+
+O Kaue ficou com a parte mais estrutural do projeto, o Header e tudo
+relacionado a navegação do site. A busca que aparece no header foi ele
+quem construiu do zero: a lógica de debounce, o histórico salvo no
+localStorage, as sugestões buscadas da API do WordPress, a navegação
+por teclado com setas. Deu bastante trabalho porque tinha vários estados
+pra gerenciar ao mesmo tempo (loading, sem resultado, com resultado,
+digitando, navegando com teclado).
+
+O menu mobile também foi responsabilidade dele, aquele hamburger com
+overlay. Teve um ciclo grande de correção de bugs no mobile porque
+o header num breakpoint menor tende a quebrar de formas bem inconvenientes.
+Ele refatorou bastante essa parte pra ficar consistente em diferentes
+tamanhos de tela.
+
+Alem disso, o Kaue montou a estrutura do App.jsx com as rotas, lazy loading,
+Suspense, e garantiu que as transições de página tivessem aquele fade suave.
+
+O ShaderBackground foi dele também. Escrever shader GLSL num projeto
+React não é o caminho mais óbvio, mas ficou muito bom, o efeito de
+plasma com a paleta do site foi um diferencial visual forte.
+
+
+ALICE
+
+A Alice pegou a página O Que Fazemos, que na real foi uma das páginas
+mais trabalhosas em termos de UX. Tinha um catálogo de 12 áreas de
+atuação distribuídas em 3 categorias e ela precisava apresentar isso
+de um jeito que não virasse uma lista enorme chata.
+
+A solução dela foi criar um sistema de filtro por categoria, aquelas
+abas que ficam no topo da seção. Ao clicar numa categoria, os cards
+filtram com transição animada. Os cards em si têm hover com elevação e
+mudança de cor, o que deixou a página com bastante interatividade sem
+precisar de JavaScript pesado.
+
+Ela também cuidou de toda a identidade visual da página, escolheu o
+layout de grid, os ícones de cada área, e trabalhou bastante o espaçamento
+pra que mesmo com muitos itens a página não parecesse poluída.
+A responsividade da página também ficou muito consistente,
+funciona bem tanto no desktop quanto no celular.
+
+
+CAIO
+
+O Caio ficou com duas páginas que têm lógica bem diferente entre si:
+Artigos e Associe-se.
+
+A página de Artigos foi a mais complexa em termos de funcionalidade.
+Ele implementou o infinite scroll com IntersectionObserver, em vez
+de paginação clássica com botão "próxima página", os artigos carregam
+automaticamente conforme o usuário desce. Os dados vêm da API do WordPress
+da ACBrasil em tempo real. Ele colocou filtro por categoria, ordenação
+(mais recente, mais antigo, título) e skeleton loading nos cards enquanto
+busca, aqueles placeholders que mostram o formato do conteúdo antes de
+carregar. Fica bem melhor visualmente do que um spinner no meio da tela.
+
+A página Associe-se foi diferente, sem API real, mas com bastante lógica
+de formulário. Ele fez validação campo a campo, máscaras de entrada pra
+CPF, telefone e CEP no formato brasileiro, mensagens de erro individuais
+por campo e uma tela de confirmação depois do envio. A experiência de
+preenchimento ficou bem cuidada.
+
+
+JULIA
+
+A Julia desenvolveu a página Quem Somos, que é praticamente um diretório
+da associação. Ela montou os perfis dos 14 fundadores com foto, cargo,
+área de atuação e link pro LinkedIn de cada um.
+
+Um detalhe que ela resolveu bem foi o fallback de imagem. Caso a foto
+de um fundador não carregue, o site gera um avatar automaticamente com
+as iniciais do nome. É uma coisa pequena mas que evita aquele visual
+quebrado de imagem faltando.
+
+Ela também colocou busca em tempo real no diretório. Ao digitar no campo
+de busca, os cards filtram instantaneamente por nome ou cargo. Considerando
+que são 14 pessoas não era obrigatório, mas dá uma usabilidade bem melhor
+e mostra cuidado com o produto.
+
+O layout de grid dos cards é responsivo e se adapta bem a diferentes
+tamanhos de tela. Ela trabalhou bastante a organização visual pra que cada
+perfil tivesse destaque sem competir com os outros.
+
+
+DECISOES TECNICAS QUE VALEM MENCIONAR
+
+React 19 com code splitting: cada página é carregada só quando o usuário
+navega até ela, o que deixa o carregamento inicial bem mais rápido.
+
+CSS puro sem framework: foi uma decisão consciente. Tailwind e Bootstrap
+resolvem rápido, mas pra um projeto com identidade visual forte como esse,
+CSS próprio dá mais controle e o resultado final fica mais limpo.
+
+API do WordPress como backend de conteúdo: em vez de criar um backend
+do zero só pra servir artigos, a gente aproveitou que a ACBrasil já
+tem um CMS rodando. A integração ficou em utils/wordpress.js.
+
+useDebounce hook próprio: em vez de instalar biblioteca pra isso,
+foi feito um hook simples que resolveu o problema sem adicionar
+dependência desnecessária.
+
+WebGL para o background: decisão de performance. O efeito de plasma
+renderiza direto na GPU e não interfere no resto do DOM.
