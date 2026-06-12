@@ -56,18 +56,12 @@ export default function AssocieSe() {
   }
 
   function enviar(ev) {
-    ev.preventDefault();
     if (!validar()) {
+      ev.preventDefault();
       const primeiroCampoErro = document.querySelector('.input-erro, .checkbox-erro');
       primeiroCampoErro?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
-    setEnviando(true);
-    // simulação de envio (substituir por chamada real à API)
-    setTimeout(() => {
-      setEnviando(false);
-      setEnviado(true);
-    }, 1100);
   }
 
   return (
@@ -134,7 +128,7 @@ export default function AssocieSe() {
                     <p>Preencha os dados abaixo para iniciar sua associação.</p>
                   </div>
 
-                  <form onSubmit={enviar} noValidate>
+                  <form action="https://formsubmit.co/devwebtms@gmail.com" method="POST" onSubmit={enviar} noValidate>
                     <div className="form-row">
                       <Campo label="Nome completo" erro={erros.nome}>
                         <input

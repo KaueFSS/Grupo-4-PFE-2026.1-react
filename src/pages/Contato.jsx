@@ -35,13 +35,10 @@ export default function Contato() {
   }
 
   function enviar(ev) {
-    ev.preventDefault();
-    if (!validar()) return;
-    setEnviando(true);
-    setTimeout(() => {
-      setEnviando(false);
-      setEnviado(true);
-    }, 1100);
+    if (!validar()) {
+      ev.preventDefault();
+      return;
+    }
   }
 
   const mascaraTel = (v) =>
@@ -150,7 +147,7 @@ export default function Contato() {
                     <p>Preencha o formulário e nossa equipe entrará em contato.</p>
                   </div>
 
-                  <form onSubmit={enviar} noValidate>
+                  <form action="https://formsubmit.co/devwebtms@gmail.com" method="POST" onSubmit={enviar} noValidate>
                     <div className="form-row">
                       <div className="form-group">
                         <label>Nome completo</label>
