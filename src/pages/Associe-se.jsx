@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { cloneElement, useState } from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/associe-se.css';
 
@@ -45,11 +45,10 @@ export default function AssocieSe() {
     const e = {};
     if (!form.nome.trim() || form.nome.trim().length < 3) e.nome = 'Informe seu nome completo';
     if (!validarEmail(form.email))      e.email = 'E-mail inválido';
-    if (!validarCPF(form.cpf))          e.cpf = 'CPF inválido';
     if (!validarTel(form.celular))      e.celular = 'Telefone inválido';
-    if (!form.nascimento)               e.nascimento = 'Selecione uma data';
-    if (!validarCEP(form.cep))          e.cep = 'CEP inválido';
     if (!form.estado)                   e.estado = 'Selecione um estado';
+    if (form.cpf && !validarCPF(form.cpf)) e.cpf = 'CPF inválido';
+    if (form.cep && !validarCEP(form.cep)) e.cep = 'CEP inválido';
     if (!form.termos)                   e.termos = 'Você precisa aceitar os termos';
     setErros(e);
     return Object.keys(e).length === 0;
@@ -150,7 +149,7 @@ export default function AssocieSe() {
                     </div>
 
                     <div className="form-row">
-                      <Campo label="CPF" erro={erros.cpf}>
+                      <Campo label="CPF" erro={erros.cpf} opcional>
                         <input
                           type="text" placeholder="000.000.000-00"
                           value={form.cpf}
@@ -170,7 +169,7 @@ export default function AssocieSe() {
                     </div>
 
                     <div className="form-row tres-colunas">
-                      <Campo label="Data de nascimento" erro={erros.nascimento}>
+                      <Campo label="Data de nascimento" erro={erros.nascimento} opcional>
                         <input
                           type="date"
                           value={form.nascimento}
@@ -179,7 +178,7 @@ export default function AssocieSe() {
                         />
                       </Campo>
 
-                      <Campo label="CEP" erro={erros.cep}>
+                      <Campo label="CEP" erro={erros.cep} opcional>
                         <input
                           type="text" placeholder="00000-000"
                           value={form.cep}
@@ -243,11 +242,14 @@ export default function AssocieSe() {
 }
 
 // Componente helper de campo com label + erro
-function Campo({ label, erro, children }) {
+function Campo({ label, erro, opcional, children }) {
+  const id = 'campo-' + label.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   return (
     <div className="form-group">
-      <label>{label}</label>
-      {children}
+      <label htmlFor={id}>
+        {label}{opcional && <span className="label-opcional"> (opcional)</span>}
+      </label>
+      {cloneElement(children, { id })}
       {erro && <span className="campo-erro">{erro}</span>}
     </div>
   );

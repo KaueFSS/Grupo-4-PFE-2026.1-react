@@ -117,6 +117,7 @@ export default function QuemSomos() {
             <input
               type="text"
               placeholder="Buscar conselheiro..."
+              aria-label="Buscar conselheiro"
               value={filtro}
               onChange={(e) => setFiltro(e.target.value)}
             />

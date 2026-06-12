@@ -289,6 +289,7 @@ export default function Header() {
           <input
             type="text"
             placeholder="Pesquisar..."
+            aria-label="Pesquisar artigos"
             value={pesquisa}
             onChange={(e) => setPesquisa(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') irParaPesquisa(); }}
@@ -311,9 +312,9 @@ export default function Header() {
             <i className="fa-solid fa-handshake"></i> Associe-se à ACBrasil
           </Link>
           <div className="menu-mobile-redes">
-            <a href="https://www.linkedin.com/company/associacao-de-conselheiros-do-brasil/" target="_blank" rel="noopener"><i className="fa-brands fa-linkedin-in"></i></a>
-            <a href="https://www.youtube.com/@acbrasil" target="_blank" rel="noopener"><i className="fa-brands fa-youtube"></i></a>
-            <a href="https://web.whatsapp.com/" target="_blank" rel="noopener"><i className="fa-brands fa-whatsapp"></i></a>
+            <a href="https://www.linkedin.com/company/associacao-de-conselheiros-do-brasil/" target="_blank" rel="noopener" aria-label="LinkedIn"><i className="fa-brands fa-linkedin-in"></i></a>
+            <a href="https://www.youtube.com/@acbrasil" target="_blank" rel="noopener" aria-label="YouTube"><i className="fa-brands fa-youtube"></i></a>
+            <a href="https://web.whatsapp.com/" target="_blank" rel="noopener" aria-label="WhatsApp"><i className="fa-brands fa-whatsapp"></i></a>
           </div>
         </div>
       </div>
