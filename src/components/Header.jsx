@@ -38,18 +38,11 @@ export default function Header() {
   const [carregando, setCarregando]   = useState(false);
   const [focado, setFocado]           = useState(false);
   const [indiceAtivo, setIndiceAtivo] = useState(-1);
-  const [scrolled, setScrolled]       = useState(false);
   const [recentes, setRecentes]       = useState(carregarRecentes);
   const searchBoxRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
   const termoDebounce = useDebounce(pesquisa, 280);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 30);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
 
   useEffect(() => {
     setMenuAberto(false);
@@ -144,7 +137,7 @@ export default function Header() {
         </div>
       </div>
 
-      <header className={scrolled ? 'scrolled' : ''}>
+      <header>
         <div className="header-container">
           <button
             type="button"
