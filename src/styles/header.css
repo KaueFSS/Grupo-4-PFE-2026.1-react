@@ -575,6 +575,6 @@ header.scrolled .logo             { height: 110px; }
 
 @media (max-width: 600px) {
   header { padding: 0 16px; }
-  .header-container { height: 64px; }
-  .logo { height: 54px; }
+  .header-container { height: 85px; }
+  .logo { height: 100px; }
 }
